@@ -6,37 +6,30 @@ on:
       - main
 
 jobs:
-  build-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout repo
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      # 2. Package WAR (using jar)
-      - name: Build WAR
-        run: |
-          mkdir build
-          jar -cvf build/openedition.war -C . .
+    - name: Upload site to EC2
+      run: |
+        echo "$VM_SSH_KEY" > key.pem
+        chmod 600 key.pem
 
-      # 3. Deploy to VM via SCP
-      - name: Copy WAR to VM
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.VM_HOST }}
-          username: ${{ secrets.VM_USER }}
-          key: ${{ secrets.VM_SSH_KEY }}
-          source: "build/openedition.war"
-          target: "/opt/tomcat/webapps/"
+        # Copy files to EC2
+        scp -i key.pem -r ./openEditions/* $VM_USER@$VM_HOST:/home/ec2-user/
 
-      # 4. Restart Tomcat remotely
-      - name: Restart Tomcat
-        uses: appleboy/ssh-action@v0.1.7
-        with:
-          host: ${{ secrets.VM_HOST }}
-          username: ${{ secrets.VM_USER }}
-          key: ${{ secrets.VM_SSH_KEY }}
-          script: |
-            /opt/tomcat/bin/shutdown.sh || true
-            /opt/tomcat/bin/startup.sh
+        # Move files to Tomcat
+        ssh -i key.pem $VM_USER@$VM_HOST << EOF
+          sudo cp /home/ec2-user/index.html /opt/tomcat/webapps/openedition/
+          sudo cp /home/ec2-user/style.css /opt/tomcat/webapps/openedition/
+          sudo /opt/tomcat/bin/shutdown.sh
+          sleep 5
+          sudo /opt/tomcat/bin/startup.sh
+        EOF
+      env:
+        VM_HOST: ${{ secrets.VM_HOST }}
+        VM_USER: ${{ secrets.VM_USER }}
+        VM_SSH_KEY: ${{ secrets.VM_SSH_KEY }}
