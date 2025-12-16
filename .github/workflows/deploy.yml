@@ -15,14 +15,15 @@ jobs:
 
     - name: Upload site to EC2
       run: |
+        # Save SSH key from secret
         echo "$VM_SSH_KEY" > key.pem
         chmod 600 key.pem
 
-        # Copy files to EC2
-        scp -i key.pem index.html style.css $VM_USER@$VM_HOST:/home/ec2-user/
+        # Copy files from repo to EC2
+        scp -i key.pem -o StrictHostKeyChecking=no index.html style.css $VM_USER@$VM_HOST:/home/ec2-user/
 
-        # Move files to Tomcat
-        ssh -i key.pem $VM_USER@$VM_HOST << EOF
+        # On EC2: create folder, move files, restart Tomcat
+        ssh -i key.pem -o StrictHostKeyChecking=no $VM_USER@$VM_HOST << EOF
           sudo cp /home/ec2-user/index.html /opt/tomcat/webapps/openedition/
           sudo cp /home/ec2-user/style.css /opt/tomcat/webapps/openedition/
           sudo /opt/tomcat/bin/shutdown.sh
