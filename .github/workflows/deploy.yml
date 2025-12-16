@@ -19,7 +19,7 @@ jobs:
         chmod 600 key.pem
 
         # Copy files to EC2
-        scp -i key.pem -r ./openEditions/* $VM_USER@$VM_HOST:/home/ec2-user/
+        scp -i key.pem index.html style.css $VM_USER@$VM_HOST:/home/ec2-user/
 
         # Move files to Tomcat
         ssh -i key.pem $VM_USER@$VM_HOST << EOF
