@@ -1,0 +1,42 @@
+name: Deploy to Tomcat
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout repo
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 2. Package WAR (using jar)
+      - name: Build WAR
+        run: |
+          mkdir build
+          jar -cvf build/openedition.war -C . .
+
+      # 3. Deploy to VM via SCP
+      - name: Copy WAR to VM
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          source: "build/openedition.war"
+          target: "/opt/tomcat/webapps/"
+
+      # 4. Restart Tomcat remotely
+      - name: Restart Tomcat
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          script: |
+            /opt/tomcat/bin/shutdown.sh || true
+            /opt/tomcat/bin/startup.sh
