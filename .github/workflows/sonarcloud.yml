@@ -8,26 +8,15 @@ on:
 
 jobs:
   sonarcloud:
-    name: SonarCloud Scan
+    name: SonarCloud
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Install SonarScanner
-        run: |
-          wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-5.0.1.3006-linux.zip
-          unzip sonar-scanner-5.0.1.3006-linux.zip
-          mv sonar-scanner-5.0.1.3006-linux sonar-scanner
-
-      - name: Run SonarCloud analysis
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-          ./sonar-scanner/bin/sonar-scanner \
-            -Dsonar.projectKey=muhammad-ali671 \
-            -Dsonar.organization=Muhammad-Ali671 \
-            -Dsonar.sources=. \
-            -Dsonar.host.url=https://sonarcloud.io \
-            -Dsonar.login=${SONAR_TOKEN}
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v2
+        with:
+          projectKey: muhammad-ali671
+          organization: Muhammad-Ali671
+          token: ${{ secrets.SONAR_TOKEN }}
