@@ -19,7 +19,8 @@ jobs:
         uses: SonarSource/sonarqube-scan-action@v2
         with:
           args: >
-            -Dsonar.projectKey=openedition
+            -Dsonar.projectKey=Muhammad-Ali671_openedition
             -Dsonar.organization=Muhammad-Ali671
             -Dsonar.host.url=https://sonarcloud.io
+            -Dsonar.sources=.
             -Dsonar.login=${{ secrets.SONAR_TOKEN }}
