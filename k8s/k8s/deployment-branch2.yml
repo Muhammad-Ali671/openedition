@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp-branch2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: myapp-branch2
+  template:
+    metadata:
+      labels:
+        app: myapp-branch2
+    spec:
+      containers:
+      - name: myapp
+        image: myapp:branch2
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8080
