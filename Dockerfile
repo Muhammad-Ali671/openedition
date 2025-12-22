@@ -1,15 +1,32 @@
-# Use the official Tomcat base image (version 9)
+# -----------------------------
+# Stage 1: Build / prepare assets
+# -----------------------------
+FROM alpine:latest AS builder
+
+RUN apk add --no-cache curl bash
+WORKDIR /site
+
+COPY index.html .
+COPY style.css .
+
+# -----------------------------
+# Stage 2: Runtime (Tomcat)
+# -----------------------------
 FROM tomcat:9.0
 
-# Create a custom webapp folder inside Tomcat
+# Remove default webapps to avoid clutter
+RUN rm -rf /usr/local/tomcat/webapps/*
+
+# Create custom folder inside webapps
 RUN mkdir -p /usr/local/tomcat/webapps/openedition
 
-# Copy your site files into the openedition folder
-COPY index.html /usr/local/tomcat/webapps/openedition/
-COPY style.css /usr/local/tomcat/webapps/openedition/
+# Copy site files into openedition folder
+COPY --from=builder /site/index.html /usr/local/tomcat/webapps/openedition/
+COPY --from=builder /site/style.css /usr/local/tomcat/webapps/openedition/
 
-# Expose Tomcat's default port
 EXPOSE 8080
 
-# Start Tomcat when the container runs
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD curl -f http://localhost:8080/openedition/ || exit 1
+
 CMD ["catalina.sh", "run"]
